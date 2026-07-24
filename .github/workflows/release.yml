@@ -1,0 +1,47 @@
+name: Release
+
+# Build installers for every OS and attach them to a GitHub Release when a
+# version tag is pushed (e.g. `git tag v0.1.0 && git push --tags`).
+#
+# Each OS is built on its own runner on purpose: ffmpeg-static installs only the
+# host platform's ffmpeg binary, so a working Windows build must run on Windows.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: --win
+          - os: macos-latest
+            args: --mac
+          - os: ubuntu-latest
+            args: --linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Package & publish
+        run: npx electron-builder ${{ matrix.args }} --publish always
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

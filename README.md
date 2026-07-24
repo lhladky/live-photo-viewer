@@ -102,6 +102,30 @@ src/
   decoding is verified manually against real samples.
 - **Don't commit** `_examples/`, `node_modules/`, or build output (`out/`, `dist/`).
 
+## Packaging & releases
+
+Packaging uses [electron-builder](https://electron.build) (config in `electron-builder.yml`).
+
+```bash
+npm run package         # build installers for the current OS into dist/
+npm run package:mac     # .dmg + .zip
+npm run package:win     # NSIS installer + .zip
+npm run package:linux   # AppImage + .deb
+npm run package:dir     # unpacked app (fast, for smoke-testing)
+```
+
+> **Build each OS on that OS.** `ffmpeg-static` (and `ffprobe-static`) install only the _host_
+> platform's binary, so a Windows build produced on macOS would bundle the macOS ffmpeg and fail to
+> run. The `.github/workflows/release.yml` workflow builds Windows, macOS, and Linux on their own
+> runners and attaches the installers to a GitHub Release when you push a `v*` tag:
+>
+> ```bash
+> git tag v0.1.0 && git push --tags
+> ```
+>
+> The ffmpeg/ffprobe binaries and the libheif-js wasm are unpacked out of the asar archive
+> (`asarUnpack`) so they can execute at runtime.
+
 ## License
 
 MIT

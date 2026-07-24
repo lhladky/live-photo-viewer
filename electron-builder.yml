@@ -1,0 +1,47 @@
+appId: com.lukas.livephotoviewer
+productName: Live Photo Viewer
+directories:
+  output: dist
+  buildResources: build
+# Only the built output + manifest ship inside the asar; production deps are
+# picked up automatically from package.json "dependencies".
+files:
+  - out/**
+  - package.json
+# ffmpeg/ffprobe are native binaries and libheif-js loads a .wasm from disk —
+# none can run from inside the asar archive, so unpack them next to it.
+asarUnpack:
+  - node_modules/ffmpeg-static/**
+  - node_modules/ffprobe-static/**
+  - node_modules/libheif-js/**
+# No native Node addons to rebuild; skip it for faster, more reliable packaging.
+npmRebuild: false
+
+win:
+  target:
+    - nsis
+    - zip
+  artifactName: ${productName}-${version}-${arch}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.photography
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Graphics
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+# Publishing target for CI (`electron-builder --publish always`). In GitHub
+# Actions the owner/repo are inferred from the workflow context.
+publish:
+  provider: github
