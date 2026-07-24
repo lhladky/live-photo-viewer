@@ -8,10 +8,14 @@ const inflight = new Map<string, Promise<string | null>>()
 
 export async function resolveThumbnail(stillPath: string): Promise<string | null> {
   const cached = cache.get(stillPath)
-  if (cached) return cached.url
+  if (cached) {
+    return cached.url
+  }
 
   const existing = inflight.get(stillPath)
-  if (existing) return existing
+  if (existing) {
+    return existing
+  }
 
   const p = window.viewer
     .getThumbnail(stillPath)

@@ -21,13 +21,17 @@ export default function App(): React.JSX.Element {
     window.viewer.getDiagnostics().then(setDiag)
     // Auto-open a folder passed via CLI arg / LPV_OPEN.
     window.viewer.getInitialFolder().then((folder) => {
-      if (folder) loadFolder(folder)
+      if (folder) {
+        loadFolder(folder)
+      }
     })
   }, [])
 
   async function handleOpen(): Promise<void> {
     const chosen = await window.viewer.openFolder()
-    if (chosen) loadFolder(chosen)
+    if (chosen) {
+      loadFolder(chosen)
+    }
   }
 
   return (

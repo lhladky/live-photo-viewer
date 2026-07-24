@@ -18,8 +18,11 @@ export function Gallery({ items }: Props): React.JSX.Element {
   // Arrow-key navigation through the strip.
   useEffect(() => {
     function onKey(e: KeyboardEvent): void {
-      if (e.key === 'ArrowRight') setSelectedIndex((i) => Math.min(i + 1, items.length - 1))
-      else if (e.key === 'ArrowLeft') setSelectedIndex((i) => Math.max(i - 1, 0))
+      if (e.key === 'ArrowRight') {
+        setSelectedIndex((i) => Math.min(i + 1, items.length - 1))
+      } else if (e.key === 'ArrowLeft') {
+        setSelectedIndex((i) => Math.max(i - 1, 0))
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)

@@ -45,7 +45,9 @@ export function useHoldToPlay({
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
-      if (!enabled || e.button !== 0) return
+      if (!enabled || e.button !== 0) {
+        return
+      }
       clearTimer()
       timer.current = window.setTimeout(() => {
         started.current = true

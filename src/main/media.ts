@@ -60,7 +60,9 @@ async function withSlot<T>(fn: () => Promise<T>): Promise<T> {
   } finally {
     active--
     const next = queue.shift()
-    if (next) next()
+    if (next) {
+      next()
+    }
   }
 }
 
@@ -74,11 +76,15 @@ const HEIC_EXTS = new Set(['heic', 'heif'])
  * failed (e.g. an unreadable HEIC while support is still experimental).
  */
 export async function getThumbnailPath(stillPath: string): Promise<string | null> {
-  if (!ffmpegPath) return null
+  if (!ffmpegPath) {
+    return null
+  }
   const key = await cacheKey(stillPath)
   const dir = await ensureCacheDir('thumbs')
   const out = join(dir, `${key}.jpg`)
-  if (await fileExists(out)) return out
+  if (await fileExists(out)) {
+    return out
+  }
 
   const ext = extname(stillPath).slice(1).toLowerCase()
   return withSlot(async () => {
@@ -161,7 +167,9 @@ async function thumbnailFromHeic(input: string, output: string): Promise<void> {
 
 /** Probe the first video stream's codec (e.g. "h264", "hevc"), or null. */
 async function probeVideoCodec(input: string): Promise<string | null> {
-  if (!ffprobePath) return null
+  if (!ffprobePath) {
+    return null
+  }
   try {
     const { stdout } = await execFileAsync(ffprobePath, [
       '-v',
@@ -187,11 +195,15 @@ async function probeVideoCodec(input: string): Promise<string | null> {
  * metadata track are dropped — playback is a short, silent motion loop.
  */
 export async function getVideoPath(videoPath: string): Promise<string | null> {
-  if (!ffmpegPath) return null
+  if (!ffmpegPath) {
+    return null
+  }
   const key = await cacheKey(videoPath)
   const dir = await ensureCacheDir('videos')
   const out = join(dir, `${key}.mp4`)
-  if (await fileExists(out)) return out
+  if (await fileExists(out)) {
+    return out
+  }
 
   return withSlot(async () => {
     try {
@@ -232,7 +244,9 @@ async function decodeHeicToRgba(
   const decoder = new libheif.HeifDecoder()
   const buf = await readFile(input)
   const images = decoder.decode(buf)
-  if (!images.length) throw new Error('no images in HEIC')
+  if (!images.length) {
+    throw new Error('no images in HEIC')
+  }
   const image = images[0]
   const width = image.get_width()
   const height = image.get_height()

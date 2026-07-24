@@ -62,7 +62,9 @@ function normalizeRoot(dir: string): string {
 function decodeMediaUrl(url: string): string | null {
   try {
     const u = new URL(url)
-    if (u.hostname !== 'local') return null
+    if (u.hostname !== 'local') {
+      return null
+    }
     const b64 = u.pathname.replace(/^\//, '')
     return Buffer.from(b64, 'base64url').toString('utf8')
   } catch {
@@ -76,7 +78,9 @@ async function isAllowed(absPath: string): Promise<string | null> {
     const realCmp = forCompare(real)
     for (const root of allowedRoots) {
       const rootCmp = forCompare(root)
-      if (realCmp === rootCmp.slice(0, -1) || realCmp.startsWith(rootCmp)) return real
+      if (realCmp === rootCmp.slice(0, -1) || realCmp.startsWith(rootCmp)) {
+        return real
+      }
     }
     return null
   } catch {
@@ -119,7 +123,9 @@ async function serveFile(real: string, rangeHeader: string | null): Promise<Resp
 export function registerMediaProtocol(): void {
   protocol.handle(SCHEME, async (request) => {
     const abs = decodeMediaUrl(request.url)
-    if (!abs) return new Response('bad request', { status: 400 })
+    if (!abs) {
+      return new Response('bad request', { status: 400 })
+    }
     const real = await isAllowed(abs)
     if (!real) {
       console.warn(`[media] forbidden (outside allowed roots): ${abs}`)

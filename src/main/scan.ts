@@ -39,7 +39,9 @@ export function pairFiles(folder: string, fileNames: string[]): GalleryItem[] {
     const key = pairKey(name)
     if (STILL_EXTS.has(e)) {
       const existing = stillsByKey.get(key)
-      if (!existing || preferStill(name, existing)) stillsByKey.set(key, name)
+      if (!existing || preferStill(name, existing)) {
+        stillsByKey.set(key, name)
+      }
     } else if (VIDEO_EXTS.has(e)) {
       // Prefer .mov (the native iPhone Live Photo video) over .mp4 if both exist.
       const existing = videosByKey.get(key)

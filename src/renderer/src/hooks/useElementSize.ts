@@ -10,10 +10,14 @@ export function useElementSize<T extends HTMLElement>(): [
 
   useEffect(() => {
     const el = ref.current
-    if (!el) return
+    if (!el) {
+      return
+    }
     const ro = new ResizeObserver((entries) => {
       const box = entries[0]?.contentRect
-      if (box) setSize({ width: box.width, height: box.height })
+      if (box) {
+        setSize({ width: box.width, height: box.height })
+      }
     })
     ro.observe(el)
     return () => ro.disconnect()

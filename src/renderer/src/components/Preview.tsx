@@ -26,19 +26,25 @@ export function Preview({ item }: Props): React.JSX.Element {
     setVideoUrl(null)
     setPlaying(false)
     setPreparing(false)
-    if (!item || !isLive || !item.videoPath) return
+    if (!item || !isLive || !item.videoPath) {
+      return
+    }
     let alive = true
     window.viewer.getVideo(item.videoPath).then((url) => {
-      if (alive) setVideoUrl(url)
+      if (alive) {
+        setVideoUrl(url)
+      }
     })
     return () => {
       alive = false
     }
-  }, [item?.id, isLive, item?.videoPath])
+  }, [item, isLive])
 
   const doPlay = useCallback(() => {
     const v = videoRef.current
-    if (!v) return
+    if (!v) {
+      return
+    }
     setPreparing(false)
     setPlaying(true)
     v.currentTime = 0
@@ -46,10 +52,15 @@ export function Preview({ item }: Props): React.JSX.Element {
   }, [])
 
   const start = useCallback(() => {
-    if (!isLive) return
+    if (!isLive) {
+      return
+    }
     wantPlay.current = true
-    if (videoUrl) doPlay()
-    else setPreparing(true) // auto-plays once prepared (effect below)
+    if (videoUrl) {
+      doPlay()
+    } else {
+      setPreparing(true)
+    } // auto-plays once prepared (effect below)
   }, [isLive, videoUrl, doPlay])
 
   const stop = useCallback(() => {
@@ -61,7 +72,9 @@ export function Preview({ item }: Props): React.JSX.Element {
 
   // If the video finished preparing while the user is still holding, play it.
   useEffect(() => {
-    if (videoUrl && wantPlay.current) doPlay()
+    if (videoUrl && wantPlay.current) {
+      doPlay()
+    }
   }, [videoUrl, doPlay])
 
   const hold = useHoldToPlay({ enabled: isLive, onStart: start, onStop: stop })

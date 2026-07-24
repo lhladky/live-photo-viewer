@@ -66,7 +66,9 @@ function resolveInitialFolder(): string | null {
   for (const c of candidates) {
     try {
       const abs = resolve(c)
-      if (statSync(abs).isDirectory()) return abs
+      if (statSync(abs).isDirectory()) {
+        return abs
+      }
     } catch {
       // not a path we can use; keep looking
     }
@@ -80,7 +82,9 @@ function registerIpc(): void {
       title: 'Choose a photo folder',
       properties: ['openDirectory']
     })
-    if (result.canceled || result.filePaths.length === 0) return null
+    if (result.canceled || result.filePaths.length === 0) {
+      return null
+    }
     return result.filePaths[0]
   })
 
@@ -127,10 +131,14 @@ app.whenReady().then(async () => {
   createWindow()
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow()
+    }
   })
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
 })

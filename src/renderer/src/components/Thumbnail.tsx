@@ -17,9 +17,14 @@ export function Thumbnail({ item, selected, onSelect }: Props): React.JSX.Elemen
     setUrl(null)
     setFailed(false)
     resolveThumbnail(item.stillPath).then((u) => {
-      if (!alive) return
-      if (u) setUrl(u)
-      else setFailed(true)
+      if (!alive) {
+        return
+      }
+      if (u) {
+        setUrl(u)
+      } else {
+        setFailed(true)
+      }
     })
     return () => {
       alive = false

@@ -12,7 +12,9 @@ const execFileAsync = promisify(execFile)
  * `app.asar.unpacked`, so we rewrite the path here to match.
  */
 function resolveBinary(p: string | null): string | null {
-  if (!p) return null
+  if (!p) {
+    return null
+  }
   return p.replace('app.asar', 'app.asar.unpacked')
 }
 
@@ -20,7 +22,9 @@ export const ffmpegPath = resolveBinary(ffmpegStatic as unknown as string | null
 export const ffprobePath = resolveBinary(ffprobeStatic?.path ?? null)
 
 async function ffmpegList(kind: 'codecs' | 'demuxers'): Promise<string> {
-  if (!ffmpegPath) return ''
+  if (!ffmpegPath) {
+    return ''
+  }
   try {
     const { stdout } = await execFileAsync(ffmpegPath, ['-hide_banner', `-${kind}`], {
       maxBuffer: 8 * 1024 * 1024
