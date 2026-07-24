@@ -104,12 +104,19 @@ src/
 
 ## Packaging & releases
 
-Packaging uses [electron-builder](https://electron.build) (config in `electron-builder.yml`).
+Packaging uses [electron-builder](https://electron.build) (config in `electron-builder.yml`). An
+installer is optional — each OS also produces a no-install build:
+
+| OS      | Installer          | Portable / no-install                 |
+| ------- | ------------------ | ------------------------------------- |
+| Windows | NSIS `…-Setup.exe` | `…-Portable.exe` (single file) + .zip |
+| macOS   | `.dmg`             | `.zip` (unzip → run the `.app`)       |
+| Linux   | `.deb`             | `.AppImage` (single executable)       |
 
 ```bash
 npm run package         # build installers for the current OS into dist/
 npm run package:mac     # .dmg + .zip
-npm run package:win     # NSIS installer + .zip
+npm run package:win     # NSIS installer + portable .exe + .zip
 npm run package:linux   # AppImage + .deb
 npm run package:dir     # unpacked app (fast, for smoke-testing)
 ```
