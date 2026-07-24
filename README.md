@@ -5,8 +5,8 @@ does: a still image that animates when you press-and-hold. Point it at a folder,
 still with its short video, shows a virtualized thumbnail strip plus one large preview, and plays
 the motion on demand.
 
-> Status: complete (browse + press-and-hold playback). HEIC stills are **experimental** (see
-> below). Packaging/installers are not set up yet.
+> Browse a folder of iPhone Live Photos and play them with press-and-hold. Windows, macOS, and
+> Linux builds are supported. HEIC stills are **experimental** (see below).
 
 ## Features
 
