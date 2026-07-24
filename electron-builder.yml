@@ -20,15 +20,13 @@ npmRebuild: false
 win:
   target:
     - nsis # Setup.exe installer
-    - portable # single self-contained .exe, no install
-    - zip # unzip-and-run folder
+    - zip # portable: unzip-and-run, no install
+  artifactName: ${productName}-${version}-${arch}.${ext}
 nsis:
   artifactName: ${productName}-${version}-Setup.${ext}
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
-portable:
-  artifactName: ${productName}-${version}-Portable.${ext}
 
 mac:
   target:
