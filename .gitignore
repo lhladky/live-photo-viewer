@@ -4,3 +4,6 @@ dist/
 *.log
 .DS_Store
 .vite/
+
+# Local sample media
+_examples/

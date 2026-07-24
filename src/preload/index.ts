@@ -1,9 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { ViewerApi } from '../shared/types'
+import { toMediaUrl } from '../shared/mediaUrl'
 
 const api: ViewerApi = {
   openFolder: () => ipcRenderer.invoke('dialog:openFolder'),
   scanFolder: (folder: string) => ipcRenderer.invoke('scan:folder', folder),
+  getThumbnail: (stillPath: string) => ipcRenderer.invoke('thumb:get', stillPath),
+  mediaUrl: (absPath: string) => toMediaUrl(absPath),
+  getInitialFolder: () => ipcRenderer.invoke('app:getInitialFolder'),
   getDiagnostics: () => ipcRenderer.invoke('app:getDiagnostics')
 }
 

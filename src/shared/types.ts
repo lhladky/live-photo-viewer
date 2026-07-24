@@ -33,6 +33,15 @@ export interface ViewerApi {
   openFolder: () => Promise<string | null>
   /** Scan a folder and return its paired gallery items. */
   scanFolder: (folder: string) => Promise<ScanResult>
+  /**
+   * Generate (or fetch from cache) a downscaled thumbnail for a still and
+   * return a media:// URL, or null if it could not be decoded.
+   */
+  getThumbnail: (stillPath: string) => Promise<string | null>
+  /** Build a media:// URL for an original file (still preview / video). Synchronous. */
+  mediaUrl: (absPath: string) => string
+  /** Folder to auto-open on launch (from a CLI arg or the LPV_OPEN env var), or null. */
+  getInitialFolder: () => Promise<string | null>
   /** App + runtime info for the M1 spike / diagnostics panel. */
   getDiagnostics: () => Promise<Diagnostics>
 }
