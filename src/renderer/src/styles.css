@@ -78,6 +78,55 @@ body {
   color: var(--muted);
 }
 
+.filelist {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  max-width: 640px;
+  max-height: 45vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.filelist li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.filelist li:last-child {
+  border-bottom: none;
+}
+
+.live-tag {
+  background: var(--accent);
+  color: white;
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.fname {
+  color: var(--text);
+}
+
+.fext {
+  color: var(--muted);
+}
+
+.filelist .more {
+  color: var(--muted);
+  font-style: italic;
+}
+
 .diag {
   margin-top: 24px;
   max-width: 640px;

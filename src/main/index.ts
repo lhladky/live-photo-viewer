@@ -1,8 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'node:path'
 import process from 'node:process'
-import type { Diagnostics } from '../shared/types'
+import type { Diagnostics, ScanResult } from '../shared/types'
 import { ffmpegPath, ffprobePath, checkFfmpegCapabilities } from './ffmpeg'
+import { scanFolder } from './scan'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -60,7 +61,9 @@ function registerIpc(): void {
     }
   })
 
-  // scanFolder is registered in M2 (src/main/scan.ts wiring).
+  ipcMain.handle('scan:folder', async (_e, folder: string): Promise<ScanResult> => {
+    return scanFolder(folder)
+  })
 }
 
 app.whenReady().then(() => {

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import type { Diagnostics } from '@shared/types'
+import type { Diagnostics, ScanResult } from '@shared/types'
 
 export default function App(): React.JSX.Element {
   const [diag, setDiag] = useState<Diagnostics | null>(null)
-  const [folder, setFolder] = useState<string | null>(null)
+  const [scan, setScan] = useState<ScanResult | null>(null)
+  const [scanning, setScanning] = useState(false)
 
   useEffect(() => {
     window.viewer.getDiagnostics().then(setDiag)
@@ -11,7 +12,15 @@ export default function App(): React.JSX.Element {
 
   async function handleOpen(): Promise<void> {
     const chosen = await window.viewer.openFolder()
-    if (chosen) setFolder(chosen)
+    if (!chosen) return
+    setScanning(true)
+    setScan(null)
+    try {
+      const result = await window.viewer.scanFolder(chosen)
+      setScan(result)
+    } finally {
+      setScanning(false)
+    }
   }
 
   return (
@@ -25,14 +34,33 @@ export default function App(): React.JSX.Element {
 
       <main className="content">
         <p className="hint">
-          {folder ? (
+          {scanning ? (
+            'Scanning…'
+          ) : scan ? (
             <>
-              Selected: <code>{folder}</code> — scanning arrives in the next milestone.
+              <code>{scan.folder}</code> — {scan.photoCount} photos, {scan.liveCount} live.
             </>
           ) : (
             'Choose a folder of iPhone photos to begin.'
           )}
         </p>
+
+        {scan && (
+          <ul className="filelist">
+            {scan.items.slice(0, 500).map((item) => (
+              <li key={item.id}>
+                {item.isLive && <span className="live-tag">LIVE</span>}
+                <span className="fname">{item.name}</span>
+                <span className="fext">.{item.ext}</span>
+              </li>
+            ))}
+            {scan.items.length > 500 && (
+              <li className="more">
+                …and {scan.items.length - 500} more (virtualized gallery in M3)
+              </li>
+            )}
+          </ul>
+        )}
 
         <section className="diag">
           <h2>Diagnostics (M1 spike)</h2>
