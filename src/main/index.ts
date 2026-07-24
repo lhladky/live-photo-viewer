@@ -5,7 +5,7 @@ import process from 'node:process'
 import type { Diagnostics, ScanResult } from '../shared/types'
 import { ffmpegPath, ffprobePath, checkFfmpegCapabilities } from './ffmpeg'
 import { scanFolder } from './scan'
-import { getThumbnailPath, getCacheRoot } from './media'
+import { getThumbnailPath, getVideoPath, getCacheRoot } from './media'
 import {
   registerMediaSchemePrivileges,
   registerMediaProtocol,
@@ -111,6 +111,11 @@ function registerIpc(): void {
   ipcMain.handle('thumb:get', async (_e, stillPath: string): Promise<string | null> => {
     const thumbPath = await getThumbnailPath(stillPath)
     return thumbPath ? toMediaUrl(thumbPath) : null
+  })
+
+  ipcMain.handle('video:get', async (_e, videoPath: string): Promise<string | null> => {
+    const mp4 = await getVideoPath(videoPath)
+    return mp4 ? toMediaUrl(mp4) : null
   })
 }
 

@@ -5,20 +5,22 @@ import { createHash } from 'node:crypto'
 import { stat, mkdir, access, readFile } from 'node:fs/promises'
 import { join, extname } from 'node:path'
 import { cpus } from 'node:os'
-import { ffmpegPath } from './ffmpeg'
+import { ffmpegPath, ffprobePath } from './ffmpeg'
 
 const execFileAsync = promisify(execFile)
 
 /** Longest edge (px) for generated thumbnails. 2x for crisp display on HiDPI. */
 const THUMB_MAX = 320
 
-let cacheDirPromise: Promise<string> | null = null
-async function cacheDir(): Promise<string> {
-  if (!cacheDirPromise) {
-    const dir = join(app.getPath('userData'), 'cache', 'thumbs')
-    cacheDirPromise = mkdir(dir, { recursive: true }).then(() => dir)
+const cacheDirPromises = new Map<string, Promise<string>>()
+async function ensureCacheDir(sub: 'thumbs' | 'videos'): Promise<string> {
+  let p = cacheDirPromises.get(sub)
+  if (!p) {
+    const dir = join(app.getPath('userData'), 'cache', sub)
+    p = mkdir(dir, { recursive: true }).then(() => dir)
+    cacheDirPromises.set(sub, p)
   }
-  return cacheDirPromise
+  return p
 }
 
 /** Absolute path of the on-disk thumbnail cache root (created on first use). */
@@ -74,7 +76,7 @@ const HEIC_EXTS = new Set(['heic', 'heif'])
 export async function getThumbnailPath(stillPath: string): Promise<string | null> {
   if (!ffmpegPath) return null
   const key = await cacheKey(stillPath)
-  const dir = await cacheDir()
+  const dir = await ensureCacheDir('thumbs')
   const out = join(dir, `${key}.jpg`)
   if (await fileExists(out)) return out
 
@@ -152,6 +154,73 @@ async function thumbnailFromHeic(input: string, output: string): Promise<void> {
     ff.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`))))
     ff.stdin.write(Buffer.from(data.buffer, data.byteOffset, data.byteLength))
     ff.stdin.end()
+  })
+}
+
+// ---- Video preparation ------------------------------------------------------
+
+/** Probe the first video stream's codec (e.g. "h264", "hevc"), or null. */
+async function probeVideoCodec(input: string): Promise<string | null> {
+  if (!ffprobePath) return null
+  try {
+    const { stdout } = await execFileAsync(ffprobePath, [
+      '-v',
+      'error',
+      '-select_streams',
+      'v:0',
+      '-show_entries',
+      'stream=codec_name',
+      '-of',
+      'default=nokey=1:noprint_wrappers=1',
+      input
+    ])
+    return stdout.trim() || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Prepare a browser-playable MP4 for a Live Photo video and return its cached
+ * absolute path. iPhone Live Photos are often already H.264 (just remux, near
+ * instant); HEVC clips are transcoded to H.264. Audio and the Live Photo
+ * metadata track are dropped — playback is a short, silent motion loop.
+ */
+export async function getVideoPath(videoPath: string): Promise<string | null> {
+  if (!ffmpegPath) return null
+  const key = await cacheKey(videoPath)
+  const dir = await ensureCacheDir('videos')
+  const out = join(dir, `${key}.mp4`)
+  if (await fileExists(out)) return out
+
+  return withSlot(async () => {
+    try {
+      const codec = await probeVideoCodec(videoPath)
+      const common = ['-hide_banner', '-loglevel', 'error', '-i', videoPath, '-map', '0:v:0', '-an']
+      const args =
+        codec === 'h264'
+          ? [...common, '-c:v', 'copy', '-movflags', '+faststart', '-y', out]
+          : [
+              ...common,
+              '-c:v',
+              'libx264',
+              '-preset',
+              'veryfast',
+              '-crf',
+              '20',
+              '-pix_fmt',
+              'yuv420p',
+              '-movflags',
+              '+faststart',
+              '-y',
+              out
+            ]
+      await execFileAsync(ffmpegPath!, args, { timeout: 120_000 })
+      return (await fileExists(out)) ? out : null
+    } catch (err) {
+      console.error(`[video] prepare failed for ${videoPath}:`, err)
+      return null
+    }
   })
 }
 

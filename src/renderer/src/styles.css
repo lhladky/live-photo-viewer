@@ -120,6 +120,16 @@ body {
   user-select: none;
 }
 
+.preview__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
 .preview__live {
   position: absolute;
   top: 14px;

@@ -38,6 +38,11 @@ export interface ViewerApi {
    * return a media:// URL, or null if it could not be decoded.
    */
   getThumbnail: (stillPath: string) => Promise<string | null>
+  /**
+   * Prepare (remux/transcode) a Live Photo video into a browser-playable MP4
+   * and return a media:// URL, or null on failure.
+   */
+  getVideo: (videoPath: string) => Promise<string | null>
   /** Build a media:// URL for an original file (still preview / video). Synchronous. */
   mediaUrl: (absPath: string) => string
   /** Folder to auto-open on launch (from a CLI arg or the LPV_OPEN env var), or null. */

@@ -6,6 +6,7 @@ const api: ViewerApi = {
   openFolder: () => ipcRenderer.invoke('dialog:openFolder'),
   scanFolder: (folder: string) => ipcRenderer.invoke('scan:folder', folder),
   getThumbnail: (stillPath: string) => ipcRenderer.invoke('thumb:get', stillPath),
+  getVideo: (videoPath: string) => ipcRenderer.invoke('video:get', videoPath),
   mediaUrl: (absPath: string) => toMediaUrl(absPath),
   getInitialFolder: () => ipcRenderer.invoke('app:getInitialFolder'),
   getDiagnostics: () => ipcRenderer.invoke('app:getDiagnostics')
