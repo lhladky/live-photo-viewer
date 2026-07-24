@@ -1,0 +1,18 @@
+{
+  "name": "live-photo-viewer",
+  "version": "0.1.0",
+  "description": "Display local iPhone Live Photos (still + video pairs) as a gallery",
+  "main": "./out/main/index.js",
+  "author": "lukas",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "test": "vitest run",
+    "package:win": "electron-vite build && electron-builder --win"
+  }
+}
