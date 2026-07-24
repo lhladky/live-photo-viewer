@@ -6,12 +6,17 @@ export default function App(): React.JSX.Element {
   const [diag, setDiag] = useState<Diagnostics | null>(null)
   const [scan, setScan] = useState<ScanResult | null>(null)
   const [scanning, setScanning] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [dragging, setDragging] = useState(false)
 
   async function loadFolder(folder: string): Promise<void> {
     setScanning(true)
     setScan(null)
+    setError(null)
     try {
       setScan(await window.viewer.scanFolder(folder))
+    } catch (err) {
+      setError(`Could not read that folder: ${(err as Error).message ?? err}`)
     } finally {
       setScanning(false)
     }
@@ -34,8 +39,33 @@ export default function App(): React.JSX.Element {
     }
   }
 
+  function onDrop(e: React.DragEvent): void {
+    e.preventDefault()
+    setDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (!file) {
+      return
+    }
+    const path = window.viewer.getPathForFile(file)
+    if (path) {
+      loadFolder(path)
+    }
+  }
+
+  function onDragOver(e: React.DragEvent): void {
+    e.preventDefault()
+    setDragging(true)
+  }
+
+  const hasGallery = scan && scan.items.length > 0
+
   return (
-    <div className="app">
+    <div
+      className="app"
+      onDragOver={onDragOver}
+      onDragLeave={() => setDragging(false)}
+      onDrop={onDrop}
+    >
       <header className="topbar">
         <h1>Live Photo Viewer</h1>
         <div className="topbar__meta">
@@ -50,22 +80,43 @@ export default function App(): React.JSX.Element {
         </div>
       </header>
 
-      {scan ? <Gallery items={scan.items} /> : <StartScreen scanning={scanning} diag={diag} />}
+      {hasGallery ? (
+        <Gallery items={scan.items} />
+      ) : (
+        <StartScreen
+          scanning={scanning}
+          diag={diag}
+          error={error}
+          empty={!!scan && scan.items.length === 0}
+        />
+      )}
+
+      {dragging && <div className="dropzone">Drop a folder to open</div>}
     </div>
   )
 }
 
 function StartScreen({
   scanning,
-  diag
+  diag,
+  error,
+  empty
 }: {
   scanning: boolean
   diag: Diagnostics | null
+  error: string | null
+  empty: boolean
 }): React.JSX.Element {
   return (
     <main className="content">
       <p className="hint">
-        {scanning ? 'Scanning…' : 'Choose a folder of iPhone photos to begin.'}
+        {scanning
+          ? 'Scanning…'
+          : error
+            ? error
+            : empty
+              ? 'No photos found in this folder. Try another.'
+              : 'Choose a folder of iPhone photos, or drag one onto the window.'}
       </p>
 
       <section className="diag">

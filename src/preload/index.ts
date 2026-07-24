@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { ViewerApi } from '../shared/types'
 import { toMediaUrl } from '../shared/mediaUrl'
 
@@ -8,6 +8,7 @@ const api: ViewerApi = {
   getThumbnail: (stillPath: string) => ipcRenderer.invoke('thumb:get', stillPath),
   getVideo: (videoPath: string) => ipcRenderer.invoke('video:get', videoPath),
   mediaUrl: (absPath: string) => toMediaUrl(absPath),
+  getPathForFile: (file: File) => webUtils.getPathForFile(file),
   getInitialFolder: () => ipcRenderer.invoke('app:getInitialFolder'),
   getDiagnostics: () => ipcRenderer.invoke('app:getDiagnostics')
 }

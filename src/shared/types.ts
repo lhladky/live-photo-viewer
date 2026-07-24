@@ -45,6 +45,8 @@ export interface ViewerApi {
   getVideo: (videoPath: string) => Promise<string | null>
   /** Build a media:// URL for an original file (still preview / video). Synchronous. */
   mediaUrl: (absPath: string) => string
+  /** Resolve the absolute filesystem path of a dropped File (Electron webUtils). */
+  getPathForFile: (file: File) => string
   /** Folder to auto-open on launch (from a CLI arg or the LPV_OPEN env var), or null. */
   getInitialFolder: () => Promise<string | null>
   /** App + runtime info for the M1 spike / diagnostics panel. */

@@ -1,5 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
-import { join, resolve } from 'node:path'
+import { join, resolve, dirname } from 'node:path'
 import { statSync } from 'node:fs'
 import process from 'node:process'
 import type { Diagnostics, ScanResult } from '../shared/types'
@@ -106,7 +106,16 @@ function registerIpc(): void {
     return resolveInitialFolder()
   })
 
-  ipcMain.handle('scan:folder', async (_e, folder: string): Promise<ScanResult> => {
+  ipcMain.handle('scan:folder', async (_e, target: string): Promise<ScanResult> => {
+    // Accept either a folder or a file inside it (drag-and-drop of a photo).
+    let folder = target
+    try {
+      if (!statSync(target).isDirectory()) {
+        folder = dirname(target)
+      }
+    } catch {
+      // Leave as-is; scanFolder will surface the error.
+    }
     // Files under the chosen folder become servable via the media:// scheme.
     allowRoot(folder)
     return scanFolder(folder)

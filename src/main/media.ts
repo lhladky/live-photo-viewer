@@ -79,11 +79,18 @@ export async function getThumbnailPath(stillPath: string): Promise<string | null
   if (!ffmpegPath) {
     return null
   }
-  const key = await cacheKey(stillPath)
-  const dir = await ensureCacheDir('thumbs')
-  const out = join(dir, `${key}.jpg`)
-  if (await fileExists(out)) {
-    return out
+  let key: string
+  let out: string
+  try {
+    key = await cacheKey(stillPath) // stat() — throws if the file vanished
+    const dir = await ensureCacheDir('thumbs')
+    out = join(dir, `${key}.jpg`)
+    if (await fileExists(out)) {
+      return out
+    }
+  } catch (err) {
+    console.error(`[thumb] cannot access ${stillPath}:`, err)
+    return null
   }
 
   const ext = extname(stillPath).slice(1).toLowerCase()
@@ -198,11 +205,18 @@ export async function getVideoPath(videoPath: string): Promise<string | null> {
   if (!ffmpegPath) {
     return null
   }
-  const key = await cacheKey(videoPath)
-  const dir = await ensureCacheDir('videos')
-  const out = join(dir, `${key}.mp4`)
-  if (await fileExists(out)) {
-    return out
+  let key: string
+  let out: string
+  try {
+    key = await cacheKey(videoPath) // stat() — throws if the file vanished
+    const dir = await ensureCacheDir('videos')
+    out = join(dir, `${key}.mp4`)
+    if (await fileExists(out)) {
+      return out
+    }
+  } catch (err) {
+    console.error(`[video] cannot access ${videoPath}:`, err)
+    return null
   }
 
   return withSlot(async () => {
