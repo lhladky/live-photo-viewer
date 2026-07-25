@@ -8,6 +8,22 @@ the motion on demand.
 > Browse a folder of iPhone Live Photos and play them with press-and-hold. Windows, macOS, and
 > Linux builds are supported. HEIC stills are **experimental** (see below).
 
+## Installation
+
+Download the latest build from the [**Releases**](https://github.com/lhladky/live-photo-viewer/releases)
+page (open the newest release, expand **Assets**), then pick the file for your OS:
+
+| OS      | Install                                         | Portable (no install)                      |
+| ------- | ----------------------------------------------- | ------------------------------------------ |
+| Windows | `…-Setup.exe`                                   | `…-x64.zip` — unzip, run the `.exe` inside |
+| macOS   | `…-arm64.dmg` — open, drag to Applications      | `…-arm64.zip` — unzip, run the app         |
+| Linux   | `…-amd64.deb` — `sudo apt install ./<file>.deb` | `…-x86_64.AppImage` — `chmod +x`, then run |
+
+The app isn't code-signed yet, so on first launch:
+
+- **Windows:** SmartScreen → **More info** → **Run anyway**.
+- **macOS:** right-click the app → **Open** → **Open**.
+
 ## Features
 
 - Open a folder via dialog, drag-and-drop, or a CLI argument.
