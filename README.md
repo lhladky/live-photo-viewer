@@ -22,7 +22,9 @@ page (open the newest release, expand **Assets**), then pick the file for your O
 The app isn't code-signed yet, so on first launch:
 
 - **Windows:** SmartScreen → **More info** → **Run anyway**.
-- **macOS:** right-click the app → **Open** → **Open**.
+- **macOS:** right-click the app → **Open** → **Open** (or System Settings → Privacy & Security →
+  **Open Anyway**). If macOS still says it's _"damaged"_, run
+  `xattr -cr "/path/to/Live Photo Viewer.app"` once, then open it.
 
 ## Features
 
