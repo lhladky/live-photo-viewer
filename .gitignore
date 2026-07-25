@@ -5,5 +5,11 @@ dist/
 .DS_Store
 .vite/
 
+# TypeScript incremental build cache (machine-local, regenerated on typecheck)
+*.tsbuildinfo
+
+# Test coverage output
+coverage/
+
 # Local sample media
 _examples/
