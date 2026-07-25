@@ -38,8 +38,10 @@ function createWindow(): void {
 
   // In dev, surface renderer console output (and errors) in the terminal.
   if (process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.webContents.on('console-message', (_e, level, message, line, source) => {
-      console.log(`[renderer:${level}] ${message} (${source}:${line})`)
+    mainWindow.webContents.on('console-message', (event) => {
+      console.log(
+        `[renderer:${event.level}] ${event.message} (${event.sourceId}:${event.lineNumber})`
+      )
     })
   }
 
