@@ -1,6 +1,6 @@
 # Live Photo Viewer
 
-A cross-platform desktop app that displays a local folder of iPhone **Live Photos** the way iOS
+A cross-platform desktop app that displays a local folder of Apple **Live Photos** the way iOS
 does: a still image that animates when you press-and-hold. Point it at a folder, and it pairs each
 still with its short video, shows a virtualized thumbnail strip plus one large preview, and plays
 the motion on demand.
@@ -13,10 +13,9 @@ the motion on demand.
 - Open a folder via dialog, drag-and-drop, or a CLI argument.
 - Pairs stills with their videos by filename (`IMG_1234.JPG` + `IMG_1234.MOV`), format-tolerant and
   case-insensitive.
-- Virtualized thumbnail strip that stays smooth with thousands of photos.
 - Fast, disk-cached thumbnails.
 - **Press-and-hold** the preview to play the Live Photo; releasing (or the clip ending) reverts to
-  the still.
+  the still image.
 - Arrow-key navigation between photos.
 
 ## How it works
@@ -28,8 +27,8 @@ playback is identical across operating systems:
   currently experimental (the bundled ffmpeg build cannot demux HEIF).
 - **Thumbnails** — generated with a bundled `ffmpeg` (scaled JPEG), cached to disk, and produced by a
   small concurrency pool so the UI never blocks. Only visible thumbnails are decoded (lazy).
-- **Videos** — probed with `ffprobe`; H.264 clips are remuxed to MP4 (near-instant), HEVC clips are
-  transcoded to H.264. Prepared on selection so holding plays immediately.
+- **Videos** — probed with `ffprobe`; H.264 clips are remuxed to MP4, HEVC clips are
+  transcoded to H.264. Prepared on selection so holding plays immediately (after a short, deliberate debounce).
 - **Local files** reach the sandboxed renderer through a custom `media://` protocol that only serves
   files inside allow-listed folders.
 
@@ -45,14 +44,12 @@ playback is identical across operating systems:
 | Lint / format  | [oxlint](https://oxc.rs) + [Prettier](https://prettier.io)                                                                                                                                     |
 | Tests          | [Vitest](https://vitest.dev)                                                                                                                                                                   |
 
-Chromium is bundled by Electron for consistent rendering. `oxlint` is used instead of ESLint because
-`typescript-eslint` does not yet support TypeScript 7.
+Chromium is bundled by Electron for consistent rendering. Using `oxlint` instead of ESLint due to
+`typescript-eslint` lacking TS7 support.
 
 ## Requirements
 
-- **Node 26** (managed via nvm in this project). node/npm may not be on your `PATH` in
-  non-interactive shells — either use an interactive shell or prefix commands with the nvm bin path,
-  e.g. `export PATH="$HOME/.nvm/versions/node/v26.1.0/bin:$PATH"`.
+- **Node 26**
 
 ## Local development
 
@@ -74,9 +71,6 @@ npm test             # vitest (pairing logic)
 npm run lint         # oxlint --fix
 npm run format       # prettier --write .
 ```
-
-Put a few sample iPhone Live Photos (`.JPG`/`.HEIC` + `.MOV` pairs) in `_examples/` for manual
-testing; that folder is gitignored.
 
 ## Project structure
 
