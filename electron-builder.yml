@@ -55,3 +55,4 @@ linux:
 # Actions the owner/repo are inferred from the workflow context.
 publish:
   provider: github
+  releaseType: release

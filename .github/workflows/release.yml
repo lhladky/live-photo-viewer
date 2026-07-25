@@ -7,6 +7,11 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      rebuild_tag:
+        description: "Rebuild installers from this ref (tag or branch, e.g. v1.0.0 or main) and attach them to the release matching package.json's version. Leave blank for the normal release-please flow."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -14,7 +19,9 @@ permissions:
 
 jobs:
   release-please:
-    runs-on: ubuntu-latest
+    # Skipped when rebuilding an existing tag.
+    if: ${{ inputs.rebuild_tag == '' }}
+    runs-on: ubuntu-slim
     outputs:
       release_created: ${{ steps.rp.outputs.release_created }}
       tag_name: ${{ steps.rp.outputs.tag_name }}
@@ -26,7 +33,9 @@ jobs:
 
   build:
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    # Runs after a fresh release-please release, OR standalone when rebuilding an
+    # existing tag (release-please is skipped then, hence always() + the guard).
+    if: ${{ always() && (inputs.rebuild_tag != '' || needs.release-please.outputs.release_created == 'true') }}
     strategy:
       fail-fast: false
       matrix:
@@ -39,7 +48,11 @@ jobs:
             args: --linux
     runs-on: ${{ matrix.os }}
     steps:
+      # Blank ref = the tag/branch that triggered the run (normal flow); when
+      # rebuilding, check out the requested tag so package.json has its version.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.rebuild_tag }}
 
       - uses: actions/setup-node@v4
         with:
