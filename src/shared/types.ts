@@ -1,5 +1,4 @@
 // Types shared between the main process and the renderer.
-// These are erased at compile time, so importing across processes is safe.
 
 /** A single gallery entry: a still image, optionally paired with a Live Photo video. */
 export interface GalleryItem {
