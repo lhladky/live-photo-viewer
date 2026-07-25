@@ -34,6 +34,13 @@ mac:
     - zip
   category: public.app-category.photography
   artifactName: ${productName}-${version}-${arch}.${ext}
+  # Ad-hoc sign (no paid Apple Developer cert). Gives the app a valid signature
+  # so Apple Silicon doesn't report it as "damaged"; users still get the milder
+  # "unidentified developer" prompt (right-click Open / System Settings → Open Anyway).
+  identity: '-'
+  # Hardened runtime only matters for notarization (which needs a paid cert) and
+  # can break launch when ad-hoc signed, so disable it.
+  hardenedRuntime: false
 
 linux:
   target:
