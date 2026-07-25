@@ -1,23 +1,12 @@
-name: Release
-
-# Fully automated releases via release-please.
-#
-# On every push to main, release-please maintains a "Release vX.Y.Z" pull
-# request that bumps the version and updates CHANGELOG.md from your Conventional
-# Commits. Merging that PR creates the git tag + GitHub Release (with notes), and
-# the build job below then packages every OS and uploads the installers to it.
-#
-# The build lives in THIS workflow on purpose: a tag created by the default
-# GITHUB_TOKEN does not trigger a separate tag-listening workflow, so we gate the
-# build on release-please's `release_created` output instead.
+# Manual, release-please-driven releases.
 #
 # Each OS builds on its own runner because ffmpeg-static installs only the host
 # platform's ffmpeg binary (a Windows build must run on Windows).
 
+name: Release
+
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
