@@ -1,6 +1,5 @@
-import { FixedSizeList, type ListChildComponentProps } from 'react-window'
+import { Grid, type CellComponentProps } from 'react-window'
 import type { GalleryItem } from '@shared/types'
-import { useElementSize } from '../hooks/useElementSize'
 import { Thumbnail } from './Thumbnail'
 
 interface Props {
@@ -12,44 +11,46 @@ interface Props {
 const THUMB_W = 128
 const STRIP_H = 116
 
-interface CellData {
+interface CellProps {
   items: GalleryItem[]
   selectedIndex: number
   onSelect: (index: number) => void
 }
 
-function Cell({ index, style, data }: ListChildComponentProps<CellData>): React.JSX.Element {
-  const { items, selectedIndex, onSelect } = data
+function Cell({
+  columnIndex,
+  style,
+  items,
+  selectedIndex,
+  onSelect
+}: CellComponentProps<CellProps>): React.JSX.Element {
   return (
     <div style={style} className="thumb-cell">
       <Thumbnail
-        item={items[index]}
-        selected={index === selectedIndex}
-        onSelect={() => onSelect(index)}
+        item={items[columnIndex]}
+        selected={columnIndex === selectedIndex}
+        onSelect={() => onSelect(columnIndex)}
       />
     </div>
   )
 }
 
-/** Virtualized horizontal thumbnail strip — only visible cells mount, so decode is lazy. */
+/**
+ * Virtualized horizontal thumbnail strip — a single-row Grid, so only visible
+ * cells mount and decode is lazy. react-window v2 auto-measures the parent, so
+ * no explicit width/height wiring is needed.
+ */
 export function ThumbStrip({ items, selectedIndex, onSelect }: Props): React.JSX.Element {
-  const [ref, size] = useElementSize<HTMLDivElement>()
-  const data: CellData = { items, selectedIndex, onSelect }
-
   return (
-    <div className="strip" ref={ref}>
-      {size.width > 0 && (
-        <FixedSizeList
-          layout="horizontal"
-          height={STRIP_H}
-          width={size.width}
-          itemCount={items.length}
-          itemSize={THUMB_W}
-          itemData={data}
-        >
-          {Cell}
-        </FixedSizeList>
-      )}
+    <div className="strip">
+      <Grid
+        cellComponent={Cell}
+        cellProps={{ items, selectedIndex, onSelect }}
+        columnCount={items.length}
+        columnWidth={THUMB_W}
+        rowCount={1}
+        rowHeight={STRIP_H}
+      />
     </div>
   )
 }
