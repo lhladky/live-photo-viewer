@@ -41,6 +41,8 @@ linux:
     - deb
   category: Graphics
   artifactName: ${productName}-${version}-${arch}.${ext}
+  # Required by the .deb target (package.json author has no email).
+  maintainer: lukas <lhladky@users.noreply.github.com>
 
 # Publishing target for CI (`electron-builder --publish always`). In GitHub
 # Actions the owner/repo are inferred from the workflow context.
