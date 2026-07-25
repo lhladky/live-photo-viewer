@@ -1,21 +1,43 @@
 name: Release
 
-# Build installers for every OS and attach them to a GitHub Release when a
-# version tag is pushed (e.g. `git tag v0.1.0 && git push --tags`).
+# Fully automated releases via release-please.
 #
-# Each OS is built on its own runner on purpose: ffmpeg-static installs only the
-# host platform's ffmpeg binary, so a working Windows build must run on Windows.
+# On every push to main, release-please maintains a "Release vX.Y.Z" pull
+# request that bumps the version and updates CHANGELOG.md from your Conventional
+# Commits. Merging that PR creates the git tag + GitHub Release (with notes), and
+# the build job below then packages every OS and uploads the installers to it.
+#
+# The build lives in THIS workflow on purpose: a tag created by the default
+# GITHUB_TOKEN does not trigger a separate tag-listening workflow, so we gate the
+# build on release-please's `release_created` output instead.
+#
+# Each OS builds on its own runner because ffmpeg-static installs only the host
+# platform's ffmpeg binary (a Windows build must run on Windows).
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: rp
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   build:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -41,6 +63,8 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Uploads installers to the Release that release-please already created for
+      # this tag (electron-builder finds it by version and attaches assets).
       - name: Package & publish
         run: npx electron-builder ${{ matrix.args }} --publish always
         env:
