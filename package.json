@@ -4,7 +4,7 @@
   "description": "Display local iPhone Live Photos (still + video pairs) as a gallery",
   "main": "./out/main/index.js",
   "author": "lukas",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",

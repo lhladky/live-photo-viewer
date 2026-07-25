@@ -129,4 +129,4 @@ npm run package:dir     # unpacked app (fast, for smoke-testing)
 
 ## License
 
-MIT
+[GNU General Public License v3.0](LICENSE) or later.
