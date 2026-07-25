@@ -26,6 +26,9 @@ export interface ScanResult {
   liveCount: number
 }
 
+/** Queue priority for thumbnail generation: on-screen work vs. background pre-warm. */
+export type ThumbPriority = 'visible' | 'background'
+
 /** The typed API exposed to the renderer via contextBridge (window.viewer). */
 export interface ViewerApi {
   /** Open a native folder-picker; returns the chosen path or null if cancelled. */
@@ -34,9 +37,14 @@ export interface ViewerApi {
   scanFolder: (folder: string) => Promise<ScanResult>
   /**
    * Generate (or fetch from cache) a downscaled thumbnail for a still and
-   * return a media:// URL, or null if it could not be decoded.
+   * return a media:// URL, or null if it could not be decoded. `priority`
+   * controls queue placement ('visible' preempts 'background' pre-warm).
    */
-  getThumbnail: (stillPath: string) => Promise<string | null>
+  getThumbnail: (stillPath: string, priority?: ThumbPriority) => Promise<string | null>
+  /** Drop a still-pending thumbnail request (its cell scrolled off-screen). */
+  cancelThumbnail: (stillPath: string) => void
+  /** Pre-warm the thumbnail cache for a folder at background priority. */
+  warmThumbnails: (stillPaths: string[]) => void
   /**
    * Prepare (remux/transcode) a Live Photo video into a browser-playable MP4
    * and return a media:// URL, or null on failure.

@@ -2,10 +2,16 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join, resolve, dirname } from 'node:path'
 import { statSync } from 'node:fs'
 import process from 'node:process'
-import type { Diagnostics, ScanResult } from '../shared/types'
+import type { Diagnostics, ScanResult, ThumbPriority } from '../shared/types'
 import { ffmpegPath, ffprobePath, checkFfmpegCapabilities } from './ffmpeg'
 import { scanFolder } from './scan'
-import { getThumbnailPath, getVideoPath, getCacheRoot } from './media'
+import {
+  getThumbnailPath,
+  getVideoPath,
+  getCacheRoot,
+  cancelThumbnailJob,
+  warmThumbnails
+} from './media'
 import {
   registerMediaSchemePrivileges,
   registerMediaProtocol,
@@ -123,10 +129,17 @@ function registerIpc(): void {
     return scanFolder(folder)
   })
 
-  ipcMain.handle('thumb:get', async (_e, stillPath: string): Promise<string | null> => {
-    const thumbPath = await getThumbnailPath(stillPath)
-    return thumbPath ? toMediaUrl(thumbPath) : null
-  })
+  ipcMain.handle(
+    'thumb:get',
+    async (_e, stillPath: string, priority: ThumbPriority = 'visible'): Promise<string | null> => {
+      const thumbPath = await getThumbnailPath(stillPath, priority)
+      return thumbPath ? toMediaUrl(thumbPath) : null
+    }
+  )
+
+  // Fire-and-forget: renderer notifies of cancellations / pre-warm, no reply needed.
+  ipcMain.on('thumb:cancel', (_e, stillPath: string) => cancelThumbnailJob(stillPath))
+  ipcMain.on('thumb:warm', (_e, stillPaths: string[]) => warmThumbnails(stillPaths))
 
   ipcMain.handle('video:get', async (_e, videoPath: string): Promise<string | null> => {
     const mp4 = await getVideoPath(videoPath)

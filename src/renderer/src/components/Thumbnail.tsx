@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { GalleryItem } from '@shared/types'
-import { resolveThumbnail } from '../lib/thumbnailCache'
+import { cancelThumbnail, resolveThumbnail } from '../lib/thumbnailCache'
 
 interface Props {
   item: GalleryItem
@@ -14,9 +14,11 @@ export function Thumbnail({ item, selected, onSelect }: Props): React.JSX.Elemen
 
   useEffect(() => {
     let alive = true
+    let resolved = false
     setUrl(null)
     setFailed(false)
     resolveThumbnail(item.stillPath).then((u) => {
+      resolved = true
       if (!alive) {
         return
       }
@@ -28,6 +30,10 @@ export function Thumbnail({ item, selected, onSelect }: Props): React.JSX.Elemen
     })
     return () => {
       alive = false
+      // Scrolled off before it loaded — drop the queued job so on-screen cells win.
+      if (!resolved) {
+        cancelThumbnail(item.stillPath)
+      }
     }
   }, [item.stillPath])
 

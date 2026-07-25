@@ -15,6 +15,14 @@ export function Gallery({ items }: Props): React.JSX.Element {
     setSelectedIndex(0)
   }, [items])
 
+  // Pre-warm the whole folder's thumbnails at background priority so scrolling
+  // back to already-seen items is instant. Visible requests always preempt this.
+  useEffect(() => {
+    if (items.length > 0) {
+      window.viewer.warmThumbnails(items.map((it) => it.stillPath))
+    }
+  }, [items])
+
   // Arrow-key navigation through the strip.
   useEffect(() => {
     function onKey(e: KeyboardEvent): void {

@@ -10,6 +10,9 @@ interface Props {
 
 const THUMB_W = 128
 const STRIP_H = 116
+// Preload a few cells past each edge so stepping/scrolling one nudge ahead is
+// already decoded. Kept small so it never floods the queue ahead of visible work.
+const OVERSCAN = 6
 
 interface CellProps {
   items: GalleryItem[]
@@ -50,6 +53,7 @@ export function ThumbStrip({ items, selectedIndex, onSelect }: Props): React.JSX
         columnWidth={THUMB_W}
         rowCount={1}
         rowHeight={STRIP_H}
+        overscanCount={OVERSCAN}
       />
     </div>
   )

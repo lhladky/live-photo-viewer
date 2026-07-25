@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto'
 import { stat, mkdir, access, readFile } from 'node:fs/promises'
 import { join, extname } from 'node:path'
 import { cpus } from 'node:os'
+import type { ThumbPriority } from '../shared/types'
 import { ffmpegPath, ffprobePath } from './ffmpeg'
 
 const execFileAsync = promisify(execFile)
@@ -46,23 +47,77 @@ async function cacheKey(stillPath: string): Promise<string> {
 // ---- Concurrency pool -------------------------------------------------------
 // Thumbnailing spawns ffmpeg subprocesses; cap how many run at once so a big
 // folder does not fork hundreds of processes. Sized to leave the UI responsive.
+//
+// Two priority tiers:
+//   - visible  → LIFO stack: the most recently requested item (what the user
+//     just scrolled to) is served first, so a fast scroll's newly-visible slice
+//     jumps ahead of everything scrolled past.
+//   - background → FIFO queue: pre-warm work, drained only when no visible work
+//     is pending.
+// A still-pending (not yet started) job can be cancelled the moment its cell
+// scrolls off-screen, freeing the slot for something on screen.
 const MAX_CONCURRENT = Math.max(1, cpus().length - 1)
 let active = 0
-const queue: Array<() => void> = []
 
-async function withSlot<T>(fn: () => Promise<T>): Promise<T> {
+interface Waiter {
+  key: string
+  priority: ThumbPriority
+  run: () => void
+  drop: () => void
+}
+const hiStack: Waiter[] = [] // visible, LIFO (newest served first)
+const loQueue: Waiter[] = [] // background, FIFO
+
+function takeNext(): Waiter | undefined {
+  return hiStack.pop() ?? loQueue.shift()
+}
+
+async function withSlot<T>(
+  key: string,
+  priority: ThumbPriority,
+  fn: () => Promise<T | null>
+): Promise<T | null> {
   if (active >= MAX_CONCURRENT) {
-    await new Promise<void>((resolve) => queue.push(resolve))
+    const go = await new Promise<boolean>((resolve) => {
+      const waiter: Waiter = { key, priority, run: () => resolve(true), drop: () => resolve(false) }
+      if (priority === 'visible') {
+        hiStack.push(waiter)
+      } else {
+        loQueue.push(waiter)
+      }
+    })
+    if (!go) {
+      return null // cancelled while waiting — never spawned ffmpeg
+    }
   }
   active++
   try {
     return await fn()
   } finally {
     active--
-    const next = queue.shift()
-    if (next) {
-      next()
+    takeNext()?.run()
+  }
+}
+
+/** Drop a still-pending thumbnail job (cell scrolled off before it started). */
+export function cancelThumbnailJob(key: string): void {
+  for (const list of [hiStack, loQueue]) {
+    const i = list.findIndex((w) => w.key === key)
+    if (i !== -1) {
+      const [w] = list.splice(i, 1)
+      w.drop()
+      return
     }
+  }
+}
+
+/** Bump a pending background job to the visible tier (its cell came into view). */
+function promoteWaiter(key: string): void {
+  const i = loQueue.findIndex((w) => w.key === key)
+  if (i !== -1) {
+    const [w] = loQueue.splice(i, 1)
+    w.priority = 'visible'
+    hiStack.push(w)
   }
 }
 
@@ -70,19 +125,28 @@ async function withSlot<T>(fn: () => Promise<T>): Promise<T> {
 
 const HEIC_EXTS = new Set(['heic', 'heif'])
 
+// Dedup concurrent generations of the same thumbnail (e.g. a visible request and
+// a background pre-warm racing) so ffmpeg only runs once per file. Keyed by path.
+const inflightThumbs = new Map<string, Promise<string | null>>()
+
 /**
  * Produce (and cache) a downscaled JPEG thumbnail for a still image.
  * Returns the absolute path of the cached thumbnail, or null if decoding
  * failed (e.g. an unreadable HEIC while support is still experimental).
+ *
+ * `priority` controls queue placement: 'visible' (default) jumps ahead of
+ * 'background' pre-warm work.
  */
-export async function getThumbnailPath(stillPath: string): Promise<string | null> {
+export async function getThumbnailPath(
+  stillPath: string,
+  priority: ThumbPriority = 'visible'
+): Promise<string | null> {
   if (!ffmpegPath) {
     return null
   }
-  let key: string
   let out: string
   try {
-    key = await cacheKey(stillPath) // stat() — throws if the file vanished
+    const key = await cacheKey(stillPath) // stat() — throws if the file vanished
     const dir = await ensureCacheDir('thumbs')
     out = join(dir, `${key}.jpg`)
     if (await fileExists(out)) {
@@ -93,8 +157,16 @@ export async function getThumbnailPath(stillPath: string): Promise<string | null
     return null
   }
 
+  const existing = inflightThumbs.get(stillPath)
+  if (existing) {
+    if (priority === 'visible') {
+      promoteWaiter(stillPath) // a pre-warm already in flight just became visible
+    }
+    return existing
+  }
+
   const ext = extname(stillPath).slice(1).toLowerCase()
-  return withSlot(async () => {
+  const job = withSlot(stillPath, priority, async () => {
     try {
       if (HEIC_EXTS.has(ext)) {
         await thumbnailFromHeic(stillPath, out)
@@ -106,7 +178,22 @@ export async function getThumbnailPath(stillPath: string): Promise<string | null
       console.error(`[thumb] failed for ${stillPath}:`, err)
       return null
     }
+  }).finally(() => {
+    inflightThumbs.delete(stillPath)
   })
+  inflightThumbs.set(stillPath, job)
+  return job
+}
+
+/**
+ * Warm the on-disk cache for a whole folder at background priority so scrolling
+ * back to already-seen items is instant. Fire-and-forget; visible requests
+ * always preempt this work.
+ */
+export function warmThumbnails(stillPaths: string[]): void {
+  for (const p of stillPaths) {
+    void getThumbnailPath(p, 'background')
+  }
 }
 
 /** JPG/PNG path: ffmpeg reads the file directly, applies EXIF autorotation, scales. */
@@ -219,7 +306,8 @@ export async function getVideoPath(videoPath: string): Promise<string | null> {
     return null
   }
 
-  return withSlot(async () => {
+  // User-initiated (press-and-hold), so always visible priority.
+  return withSlot(videoPath, 'visible', async () => {
     try {
       const codec = await probeVideoCodec(videoPath)
       const common = ['-hide_banner', '-loglevel', 'error', '-i', videoPath, '-map', '0:v:0', '-an']
